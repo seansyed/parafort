@@ -17393,9 +17393,6 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-  // Return the server instance
-  return server;
+// Return the server instance
+return server;
 }
-
-// Export the server instance
-export { server };
