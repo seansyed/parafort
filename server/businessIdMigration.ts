@@ -80,7 +80,7 @@ export class BusinessIdMigration {
   /**
    * Migrates mailbox subscription to use new business entity ID format
    */
-  async linkMailboxToBusinessEntity(businessEntityId: string, subscriptionId: number): Promise<void> {
+  async linkMailboxToBusinessEntity(businessEntityId: number, subscriptionId: number): Promise<void> {
     await db
       .update(userMailboxSubscriptions)
       .set({ businessEntityId })

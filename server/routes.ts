@@ -10715,7 +10715,7 @@ Provide accurate, actionable insights that help business owners understand their
       const serviceOrderData = {
         orderId,
         userId,
-        businessEntityId: businessEntityId ? parseInt(businessEntityId) : null,
+        businessEntityId: businessEntityId ? Number(businessEntityId) : null,
         serviceIds: JSON.stringify(serviceIds),
         serviceNames: selectedServices.map(s => s.name).join(', '),
         customerEmail: customerInfo.email,
@@ -14940,7 +14940,7 @@ Provide accurate, actionable insights that help business owners understand their
           if (serviceType === "bookkeeping") {
             // Create bookkeeping document
             const document = await storage.createBookkeepingDocument({
-              businessEntityId: parseInt(businessEntityId) || 1,
+              businessEntityId: Number(businessEntityId) || 1,
               fileName: file.filename,
               originalFileName: file.originalname,
               fileType: file.mimetype,
@@ -14954,7 +14954,7 @@ Provide accurate, actionable insights that help business owners understand their
           } else if (serviceType === "payroll") {
             // Create payroll document
             const document = await storage.createPayrollDocument({
-              businessEntityId: parseInt(businessEntityId) || 1,
+              businessEntityId: Number(businessEntityId) || 1,
               fileName: file.filename,
               originalFileName: file.originalname,
               documentType: documentType || "timesheet",
@@ -17392,6 +17392,3 @@ app.get('/api/health', async (req, res) => {
     });
   }
 });
-
-  return report;
-}

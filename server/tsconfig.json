@@ -12,6 +12,9 @@
     "outDir": "../dist/server",
     "rootDir": ".",
     "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    },
     "types": ["node"]
   },
   "include": ["**/*"],

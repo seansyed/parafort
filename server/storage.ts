@@ -23,7 +23,7 @@ import {
   type RegisteredAgentConsent,
   type InsertRegisteredAgentConsent,
   type ReceivedDocument,
-  type InsertReceivedDocument,
+  // type InsertReceivedDocument,
   type EinApplication,
   type InsertEinApplication,
   type EinVerification,
@@ -76,16 +76,16 @@ export interface IStorage {
   // Registered Agent operations
   getRegisteredAgentAddress(state: string): Promise<RegisteredAgentAddress | undefined>;
   createRegisteredAgentAddress(address: InsertRegisteredAgentAddress): Promise<RegisteredAgentAddress>;
-  getAgentConsent(businessEntityId: string): Promise<RegisteredAgentConsent | undefined>;
+  getAgentConsent(businessEntityId: number): Promise<RegisteredAgentConsent | undefined>;
   createAgentConsent(consent: InsertRegisteredAgentConsent): Promise<RegisteredAgentConsent>;
-  getReceivedDocuments(businessEntityId: string): Promise<ReceivedDocument[]>;
-  createReceivedDocument(document: InsertReceivedDocument): Promise<ReceivedDocument>;
+  getReceivedDocuments(businessEntityId: number): Promise<ReceivedDocument[]>;
+  // createReceivedDocument(document: InsertReceivedDocument): Promise<ReceivedDocument>;
 
   // EIN operations
-  getEinApplications(businessEntityId: string): Promise<EinApplication[]>;
+  getEinApplications(businessEntityId: number): Promise<EinApplication[]>;
   createEinApplication(application: InsertEinApplication): Promise<EinApplication>;
   updateEinApplication(id: number, updates: Partial<InsertEinApplication>): Promise<EinApplication | undefined>;
-  getEinVerifications(businessEntityId: string): Promise<EinVerification[]>;
+  getEinVerifications(businessEntityId: number): Promise<EinVerification[]>;
   
   // Document operations
   createDocument(document: InsertDocument): Promise<Document>;
@@ -319,51 +319,53 @@ export class DatabaseStorage implements IStorage {
 
   // Business entity operations
   async getBusinessEntities(userId: string): Promise<BusinessEntity[]> {
+    const numericUserId = parseInt(userId, 10);
     return await db
       .select()
       .from(businessEntities)
-      .where(eq(businessEntities.userId, userId))
+      .where(eq(businessEntities.userId, numericUserId))
       .orderBy(businessEntities.createdAt);
   }
 
   async getBusinessEntity(id: string | number, userId: string): Promise<BusinessEntity | undefined> {
-    // Convert numeric IDs to string for compatibility with old data
-    const searchId = typeof id === 'number' ? id.toString() : id;
+    // Convert IDs to number for database query
+    const numericId = typeof id === 'number' ? id : parseInt(id, 10);
+    const numericUserId = parseInt(userId, 10);
     
     const [entity] = await db
       .select()
       .from(businessEntities)
-      .where(and(eq(businessEntities.id, searchId), eq(businessEntities.userId, userId)));
+      .where(and(eq(businessEntities.id, numericId), eq(businessEntities.userId, numericUserId)));
     return entity;
   }
 
   async createBusinessEntity(entity: InsertBusinessEntity): Promise<BusinessEntity> {
-    const { generateBusinessEntityId } = await import('./businessIdGenerator');
-    const id = await generateBusinessEntityId();
-    
     const [newEntity] = await db
       .insert(businessEntities)
-      .values({ ...entity, id })
+      .values(entity)
       .returning();
     return newEntity;
   }
 
   async updateBusinessEntity(id: string | number, userId: string, updates: UpdateBusinessEntity): Promise<BusinessEntity | undefined> {
-    // Convert numeric IDs to string for compatibility with old data
-    const searchId = typeof id === 'number' ? id.toString() : id;
+    // Convert IDs to number for database query
+    const numericId = typeof id === 'number' ? id : parseInt(id, 10);
+    const numericUserId = parseInt(userId, 10);
     
     const [updatedEntity] = await db
       .update(businessEntities)
       .set({ ...updates, updatedAt: new Date() })
-      .where(and(eq(businessEntities.id, searchId), eq(businessEntities.userId, userId)))
+      .where(and(eq(businessEntities.id, numericId), eq(businessEntities.userId, numericUserId)))
       .returning();
     return updatedEntity;
   }
 
   async deleteBusinessEntity(id: string, userId: string): Promise<boolean> {
+    const numericId = parseInt(id, 10);
+    const numericUserId = parseInt(userId, 10);
     const result = await db
       .delete(businessEntities)
-      .where(and(eq(businessEntities.id, id), eq(businessEntities.userId, userId)));
+      .where(and(eq(businessEntities.id, numericId), eq(businessEntities.userId, numericUserId)));
     return (result.rowCount ?? 0) > 0;
   }
 
@@ -384,11 +386,11 @@ export class DatabaseStorage implements IStorage {
     return newAddress;
   }
 
-  async getAgentConsent(businessEntityId: string): Promise<RegisteredAgentConsent | undefined> {
+  async getAgentConsent(businessEntityId: number): Promise<RegisteredAgentConsent | undefined> {
     const [consent] = await db
       .select()
       .from(registeredAgentConsent)
-      .where(eq(registeredAgentConsent.businessEntityId, parseInt(businessEntityId)));
+      .where(eq(registeredAgentConsent.businessEntityId, businessEntityId));
     return consent;
   }
 
@@ -400,28 +402,28 @@ export class DatabaseStorage implements IStorage {
     return newConsent;
   }
 
-  async getReceivedDocuments(businessEntityId: string): Promise<ReceivedDocument[]> {
+  async getReceivedDocuments(businessEntityId: number): Promise<ReceivedDocument[]> {
     return await db
       .select()
       .from(receivedDocuments)
-      .where(eq(receivedDocuments.businessEntityId, parseInt(businessEntityId)))
+      .where(eq(receivedDocuments.businessEntityId, businessEntityId))
       .orderBy(desc(receivedDocuments.receivedDate));
   }
 
-  async createReceivedDocument(document: InsertReceivedDocument): Promise<ReceivedDocument> {
-    const [newDocument] = await db
-      .insert(receivedDocuments)
-      .values(document)
-      .returning();
-    return newDocument;
-  }
+  // async createReceivedDocument(document: InsertReceivedDocument): Promise<ReceivedDocument> {
+  //   const [newDocument] = await db
+  //     .insert(receivedDocuments)
+  //     .values(document)
+  //     .returning();
+  //   return newDocument;
+  // }
 
   // EIN operations
-  async getEinApplications(businessEntityId: string): Promise<EinApplication[]> {
+  async getEinApplications(businessEntityId: number): Promise<EinApplication[]> {
     return await db
       .select()
       .from(einApplications)
-      .where(eq(einApplications.businessEntityId, parseInt(businessEntityId)))
+      .where(eq(einApplications.businessEntityId, businessEntityId))
       .orderBy(einApplications.createdAt);
   }
 

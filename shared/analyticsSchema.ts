@@ -10,7 +10,8 @@ import {
   decimal,
   uuid,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+// import { businessEntities } from "./schema";
+// import { createInsertSchema } from "drizzle-zod";
 
 // User activity tracking for analytics
 export const userActivity = pgTable("user_activity", {
@@ -35,7 +36,7 @@ export const businessMetrics = pgTable("business_metrics", {
   period: varchar("period").notNull(), // daily, weekly, monthly, yearly
   periodStart: timestamp("period_start").notNull(),
   periodEnd: timestamp("period_end").notNull(),
-  businessEntityId: varchar("business_entity_id"),
+  businessEntityId: integer("business_entity_id"),
   userId: varchar("user_id"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -59,7 +60,7 @@ export const documentAnalytics = pgTable("document_analytics", {
 export const revenueAnalytics = pgTable("revenue_analytics", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
-  businessEntityId: varchar("business_entity_id"),
+  businessEntityId: integer("business_entity_id"),
   transactionId: varchar("transaction_id"),
   serviceType: varchar("service_type").notNull(),
   planType: varchar("plan_type"),
@@ -125,14 +126,14 @@ export const abTestAnalytics = pgTable("ab_test_analytics", {
 });
 
 // Create insert schemas
-export const insertUserActivitySchema = createInsertSchema(userActivity);
-export const insertBusinessMetricsSchema = createInsertSchema(businessMetrics);
-export const insertDocumentAnalyticsSchema = createInsertSchema(documentAnalytics);
-export const insertRevenueAnalyticsSchema = createInsertSchema(revenueAnalytics);
-export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics);
-export const insertFeatureUsageSchema = createInsertSchema(featureUsage);
-export const insertErrorLogsSchema = createInsertSchema(errorLogs);
-export const insertAbTestAnalyticsSchema = createInsertSchema(abTestAnalytics);
+// \export const insertUserActivitySchema = createInsertSchema(userActivity);
+// \export const insertBusinessMetricsSchema = createInsertSchema(businessMetrics);
+// \export const insertDocumentAnalyticsSchema = createInsertSchema(documentAnalytics);
+// \export const insertRevenueAnalyticsSchema = createInsertSchema(revenueAnalytics);
+// \export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics);
+// \export const insertFeatureUsageSchema = createInsertSchema(featureUsage);
+// \export const insertErrorLogsSchema = createInsertSchema(errorLogs);
+// \export const insertAbTestAnalyticsSchema = createInsertSchema(abTestAnalytics);
 
 // Export types
 export type UserActivity = typeof userActivity.$inferSelect;

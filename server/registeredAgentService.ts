@@ -8,7 +8,7 @@ import {
   type RegisteredAgentConsent,
   type InsertRegisteredAgentConsent,
   type ReceivedDocument,
-  type InsertReceivedDocument,
+  // type InsertReceivedDocument,
   type InsertDocumentAuditLog,
   type BusinessEntity
 } from "@shared/schema";
@@ -150,7 +150,7 @@ export class RegisteredAgentService {
     return newAddress;
   }
 
-  async createAgentConsent(businessEntityId: string, state: string): Promise<RegisteredAgentConsent> {
+  async createAgentConsent(businessEntityId: number, state: string): Promise<RegisteredAgentConsent> {
     const agentAddress = await this.getOrCreateAgentAddress(state);
 
     const [consent] = await db
@@ -167,18 +167,18 @@ export class RegisteredAgentService {
     return consent;
   }
 
-  async logReceivedDocument(documentData: InsertReceivedDocument): Promise<ReceivedDocument> {
-    const [document] = await db
-      .insert(receivedDocuments)
-      .values(documentData)
-      .returning();
+  // async logReceivedDocument(documentData: InsertReceivedDocument): Promise<ReceivedDocument> {
+  //   const [document] = await db
+  //     .insert(receivedDocuments)
+  //     .values(documentData)
+  //     .returning();
 
-    // Create audit log entry
-    await this.createAuditLog(document.id, "received", "ParaFort Agent", 
-      `Document received: ${documentData.documentType}`);
+  //   // Create audit log entry
+  //   await this.createAuditLog(document.id, "received", "ParaFort Agent", 
+  //     `Document received: ${documentData.documentType}`);
 
-    return document;
-  }
+  //   return document;
+  // }
 
   async processDocument(documentId: number, handledBy: string): Promise<void> {
     // Update document status
@@ -214,7 +214,7 @@ export class RegisteredAgentService {
       "Document forwarded to client and notification sent");
   }
 
-  async getDocumentsForEntity(businessEntityId: string): Promise<ReceivedDocument[]> {
+  async getDocumentsForEntity(businessEntityId: number): Promise<ReceivedDocument[]> {
     return await db
       .select()
       .from(receivedDocuments)

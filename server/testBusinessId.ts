@@ -1,49 +1,24 @@
-import { db } from "./db";
 import { businessEntities } from "@shared/schema";
-
-const ID_PREFIX = "000078678601";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 /**
- * Simple test function to create a business entity with 12-digit ID
+ * Simple test function to create a business entity
  */
 export async function createTestBusinessEntity(userId: string, businessName: string): Promise<any> {
-  // Generate unique 12-digit ID
-  let attempts = 0;
-  let newId = "";
+  // Create business entity using Drizzle ORM
+  const result = await db
+    .insert(businessEntities)
+    .values({
+      userId: parseInt(userId, 10),
+      name: businessName,
+      entityType: 'LLC',
+      state: 'CA',
+      status: 'draft',
+      createdAt: sql`NOW()`,
+      updatedAt: sql`NOW()`
+    })
+    .returning();
   
-  while (attempts < 10) {
-    const lastDigit = Math.floor(Math.random() * 10);
-    newId = ID_PREFIX + lastDigit;
-    
-    // Check if ID exists
-    const existing = await db
-      .select()
-      .from(businessEntities)
-      .where(`id = '${newId}'`);
-    
-    if (existing.length === 0) {
-      break;
-    }
-    attempts++;
-  }
-  
-  if (attempts >= 10) {
-    throw new Error("Could not generate unique ID");
-  }
-  
-  // Create business entity with raw SQL to avoid type issues
-  const result = await db.execute(`
-    INSERT INTO business_entities (id, user_id, name, entity_type, state, status, created_at, updated_at)
-    VALUES ('${newId}', '${userId}', '${businessName}', 'LLC', 'CA', 'draft', NOW(), NOW())
-    RETURNING *
-  `);
-  
-  return {
-    id: newId,
-    userId,
-    name: businessName,
-    entityType: 'LLC',
-    state: 'CA',
-    status: 'draft'
-  };
+  return result[0];
 }

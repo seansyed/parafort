@@ -91,7 +91,7 @@ const generateEmailTemplate = (event: any, userInfo: any, businessInfo: any, day
 };
 
 // Fetch user and business information from your actual database
-const getUserAndBusinessInfo = async (businessEntityId: string) => {
+const getUserAndBusinessInfo = async (businessEntityId: number) => {
   try {
     const { db } = await import('./db.js');
     const { businessEntities, users } = await import('../shared/schema.js');
@@ -101,7 +101,7 @@ const getUserAndBusinessInfo = async (businessEntityId: string) => {
     const businessResult = await db
       .select()
       .from(businessEntities)
-      .where(eq(businessEntities.id, parseInt(businessEntityId)))
+      .where(eq(businessEntities.id, businessEntityId))
       .limit(1);
     
     if (!businessResult.length) {

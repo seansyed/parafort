@@ -15,7 +15,7 @@ import {
   primaryKey
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+// import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -38,8 +38,7 @@ export const sessions = pgTable(
     sid: varchar("sid").primaryKey(),
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull()
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  }
 );
 
 // Tax filings table
@@ -92,6 +91,8 @@ export const users = pgTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+// Business entities table definition moved to end of file
 
 // Order completion certificates table
 export const completionCertificates = pgTable("completion_certificates", {
@@ -206,7 +207,7 @@ export const folders = pgTable("folders", {
   description: text("description"),
   parentId: integer("parent_id"),
   serviceType: varchar("service_type"), // business_formation, boir_filing, etc.
-  businessEntityId: varchar("business_entity_id"), // Will add foreign key reference later
+  businessEntityId: integer("business_entity_id"), // Will add foreign key reference later
   userId: varchar("user_id").references(() => users.id),
   isSystemFolder: boolean("is_system_folder").default(false),
   color: varchar("color").default("#3b82f6"), // hex color for UI
@@ -219,7 +220,7 @@ export const folders = pgTable("folders", {
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id"),
   folderId: integer("folder_id").references(() => folders.id),
   
   // Document details
@@ -350,7 +351,7 @@ export const formationOrders = pgTable("formation_orders", {
   id: serial("id").primaryKey(),
   orderId: varchar("order_id").unique().notNull(), // PF-XXXXXXXXX format
   userId: varchar("user_id").references(() => users.id),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id"),
   
   // Order details
   businessName: varchar("business_name").notNull(),
@@ -546,7 +547,7 @@ export const mailboxPlans = pgTable("mailbox_plans", {
 export const userMailboxSubscriptions = pgTable("user_mailbox_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id), // for business-specific subscriptions
+  businessEntityId: integer("business_entity_id"), // for business-specific subscriptions
   planType: varchar("plan_type").notNull(), // standard, premium, enterprise
   subscriptionStatus: varchar("subscription_status").notNull().default("active"), // active, cancelled, expired, trial
   stripePaymentIntentId: varchar("stripe_payment_intent_id"),
@@ -564,7 +565,7 @@ export const userServicePurchases = pgTable("user_service_purchases", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
   serviceId: integer("service_id").notNull().references(() => services.id),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id"),
   purchaseType: varchar("purchase_type").notNull(), // one_time, recurring
   status: varchar("status").notNull().default("active"), // active, cancelled, completed
   purchaseDate: timestamp("purchase_date").defaultNow(),
@@ -596,7 +597,7 @@ export const serviceOrders = pgTable("service_orders", {
   orderId: varchar("order_id").unique().notNull(), // PS-XXXXXXXXX format
   userId: varchar("user_id").references(() => users.id), // nullable for guest checkout
   serviceId: integer("service_id").references(() => services.id), // Single service per order
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").references(() => businessEntities.id),
   
   // Customer Information
   customerEmail: varchar("customer_email").notNull(),
@@ -635,67 +636,12 @@ export const serviceOrders = pgTable("service_orders", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-export const businessEntities = pgTable("business_entities", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id), // Made nullable for anonymous formation workflow
-  subscriptionPlanId: integer("subscription_plan_id").references(() => subscriptionPlans.id), // Individual subscription per business
-  subscriptionStatus: varchar("subscription_status").default("free"), // free, active, cancelled, expired
-  name: varchar("name"),
-  entityType: varchar("entity_type"), // LLC, Corporation, etc.
-  state: varchar("state"),
-  status: varchar("status").notNull().default("draft"), // draft, in_progress, completed, filed
-  businessPurpose: text("business_purpose"),
-  numberOfShares: integer("number_of_shares"),
-  parValuePerShare: decimal("par_value_per_share", { precision: 10, scale: 2 }),
-  streetAddress: varchar("street_address"),
-  city: varchar("city"),
-  stateAddress: varchar("state_address"),
-  zipCode: varchar("zip_code"),
-  mailingStreetAddress: varchar("mailing_street_address"),
-  mailingCity: varchar("mailing_city"),
-  mailingState: varchar("mailing_state"),
-  mailingZipCode: varchar("mailing_zip_code"),
-  registeredAgent: varchar("registered_agent"),
-  useParafortAgent: boolean("use_parafort_agent").default(false),
-  ein: varchar("ein"), // Employer Identification Number
-  einStatus: varchar("ein_status").default("not_applied"), // not_applied, pending, approved, rejected
-  filedDate: timestamp("filed_date"),
-  currentStep: integer("current_step").default(1),
-  totalSteps: integer("total_steps").default(7),
-  // Business Leadership Information (Step 6)
-  ownerFirstName: varchar("owner_first_name"),
-  ownerLastName: varchar("owner_last_name"),
-  ownerAddress: text("owner_address"),
-  contactEmail: varchar("contact_email"),
-  contactPhone: varchar("contact_phone"),
-  registeredAgentType: varchar("registered_agent_type"), // self, third_party
-  registeredAgentName: varchar("registered_agent_name"),
-  registeredAgentAddress: text("registered_agent_address"),
-  // Corporation-specific officers
-  presidentName: varchar("president_name"),
-  presidentAddress: text("president_address"),
-  secretaryName: varchar("secretary_name"),
-  secretaryAddress: text("secretary_address"),
-  treasurerName: varchar("treasurer_name"),
-  treasurerAddress: text("treasurer_address"),
-  directorNames: text("director_names").array(), // For corporations
-  directorAddresses: text("director_addresses").array(),
-  // LLC-specific information
-  memberNames: text("member_names").array(),
-  memberAddresses: text("member_addresses").array(),
-  ownershipPercentages: text("ownership_percentages").array(),
-  
-  // AI Insights Rate Limiting
-  lastInsightGeneration: timestamp("last_insight_generation"),
-  
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
+
 
 // EIN applications table
 export const einApplications = pgTable("ein_applications", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull(),
   businessLegalName: varchar("business_legal_name").notNull(),
   tradeName: varchar("trade_name"), // DBA name
   businessAddress: text("business_address").notNull(),
@@ -720,7 +666,7 @@ export const einApplications = pgTable("ein_applications", {
 // EIN verification records
 export const einVerifications = pgTable("ein_verifications", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull(),
   ein: varchar("ein").notNull(),
   businessName: varchar("business_name").notNull(),
   verificationProvider: varchar("verification_provider"), // middesk, irs_direct, etc.
@@ -733,7 +679,7 @@ export const einVerifications = pgTable("ein_verifications", {
 // BOIR (Beneficial Ownership Information Reporting) tables
 export const boirFilings = pgTable("boir_filings", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   filingType: varchar("filing_type").notNull(), // initial, updated, corrected
   filingStatus: varchar("filing_status").notNull().default("draft"), // draft, submitted, accepted, rejected
   isUSCompany: boolean("is_us_company").notNull().default(true),
@@ -830,7 +776,7 @@ export const boirAuditLog = pgTable("boir_audit_log", {
 // S-Corporation Election tables
 export const sCorpElections = pgTable("s_corp_elections", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   electionStatus: varchar("election_status").notNull().default("draft"), // draft, submitted, approved, rejected
   
   // Basic Entity Information
@@ -897,7 +843,7 @@ export const sCorpShareholders = pgTable("s_corp_shareholders", {
 
 export const complianceCalendar = pgTable("compliance_calendar", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   
   // Event Details
   eventType: varchar("event_type").notNull(), // s_corp_election, boir_filing, annual_report, etc.
@@ -928,7 +874,7 @@ export const complianceCalendar = pgTable("compliance_calendar", {
 
 export const complianceNotifications = pgTable("compliance_notifications", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   complianceCalendarId: integer("compliance_calendar_id").references(() => complianceCalendar.id),
   
   // Notification Details
@@ -954,7 +900,7 @@ export const complianceNotifications = pgTable("compliance_notifications", {
 // Annual Report Filing tables
 export const annualReports = pgTable("annual_reports", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   
   // Report Details
   filingYear: integer("filing_year").notNull(),
@@ -1005,7 +951,7 @@ export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   invoiceNumber: varchar("invoice_number").unique().notNull(), // INV-2025-001, etc.
   userId: varchar("user_id").notNull().references(() => users.id),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").references(() => businessEntities.id),
   subscriptionPlanId: integer("subscription_plan_id").references(() => subscriptionPlans.id),
   formationOrderId: integer("formation_order_id").references(() => formationOrders.id),
   
@@ -1117,7 +1063,7 @@ export const stateFilingRequirements = pgTable("state_filing_requirements", {
 
 export const annualReportReminders = pgTable("annual_report_reminders", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   annualReportId: integer("annual_report_id").references(() => annualReports.id),
   
   // Reminder Details
@@ -1237,7 +1183,7 @@ export const announcementInteractions = pgTable("announcement_interactions", {
 // Business Name Change tables
 export const nameChangeRequests = pgTable("name_change_requests", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   
   // Request Details
   currentLegalName: varchar("current_legal_name").notNull(),
@@ -1349,7 +1295,7 @@ export const nameChangeWorkflowTasks = pgTable("name_change_workflow_tasks", {
 
 export const businessLicenses = pgTable("business_licenses", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   
   // License Details
   licenseName: varchar("license_name").notNull(),
@@ -1418,7 +1364,7 @@ export const nameChangeTemplates = pgTable("name_change_templates", {
 // Business Dissolution tables
 export const businessDissolutions = pgTable("business_dissolutions", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   
   // Dissolution Details
   dissolutionType: varchar("dissolution_type").notNull(), // voluntary, administrative, judicial
@@ -1757,7 +1703,7 @@ export const footerConfig = pgTable("footer_config", {
 // Document reception and handling log
 export const receivedDocuments = pgTable("received_documents", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   documentType: varchar("document_type").notNull(), // legal_notice, tax_notice, annual_report, court_document, other
   documentCategory: varchar("document_category"), // subpoena, lawsuit, tax_assessment, compliance_notice
   senderName: varchar("sender_name"),
@@ -1786,7 +1732,7 @@ export const receivedDocuments = pgTable("received_documents", {
 // Virtual mailbox configuration
 export const virtualMailboxConfig = pgTable("virtual_mailbox_config", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   addressId: varchar("address_id").notNull(),
   physicalAddress: text("physical_address").notNull(),
   isActive: boolean("is_active").default(true),
@@ -1811,7 +1757,7 @@ export const documentAuditLog = pgTable("document_audit_log", {
 // Business Health Radar Tables
 export const businessHealthMetrics = pgTable("business_health_metrics", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   metricDate: timestamp("metric_date").defaultNow(),
   
   // Compliance Health Score (0-100)
@@ -1853,7 +1799,7 @@ export const businessHealthMetrics = pgTable("business_health_metrics", {
 
 export const businessHealthInsights = pgTable("business_health_insights", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   insightType: varchar("insight_type").notNull(), // prediction, recommendation, alert, trend
   priority: varchar("priority").default("medium"), // low, medium, high, critical
   
@@ -1891,7 +1837,7 @@ export const businessHealthInsights = pgTable("business_health_insights", {
 
 export const businessHealthTrends = pgTable("business_health_trends", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull(),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   trendDate: timestamp("trend_date").notNull(),
   trendPeriod: varchar("trend_period").notNull(), // daily, weekly, monthly, quarterly
   complianceScoreTrend: decimal("compliance_score_trend", { precision: 5, scale: 2 }),
@@ -1909,31 +1855,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   businessEntities: many(businessEntities)
 }));
 
-export const businessEntitiesRelations = relations(businessEntities, ({ one, many }) => ({
-  user: one(users, {
-    fields: [businessEntities.userId],
-    references: [users.id]
-  }),
-  subscriptionPlan: one(subscriptionPlans, {
-    fields: [businessEntities.subscriptionPlanId],
-    references: [subscriptionPlans.id]
-  }),
-  agentConsent: one(registeredAgentConsent, {
-    fields: [businessEntities.id],
-    references: [registeredAgentConsent.businessEntityId]
-  }),
-  receivedDocuments: many(receivedDocuments),
-  einApplications: many(einApplications),
-  einVerifications: many(einVerifications),
-  boirFilings: many(boirFilings),
-  sCorpElections: many(sCorpElections),
-  complianceCalendarItems: many(complianceCalendar),
-  complianceNotifications: many(complianceNotifications),
-  annualReports: many(annualReports),
-  annualReportReminders: many(annualReportReminders),
-  nameChangeRequests: many(nameChangeRequests),
-  businessLicenses: many(businessLicenses)
-}));
+// businessEntitiesRelations moved to end of file after table definition
 
 export const boirFilingsRelations = relations(boirFilings, ({ one, many }) => ({
   businessEntity: one(businessEntities, {
@@ -2170,19 +2092,19 @@ export const announcementInteractionsRelations = relations(announcementInteracti
 }));
 
 // Types for Announcements
-export const insertAnnouncementSchema = createInsertSchema(announcements);
-export const selectAnnouncementSchema = createSelectSchema(announcements);
+// \export const insertAnnouncementSchema = createInsertSchema(announcements);
+// export const selectAnnouncementSchema = createSelectSchema(announcements);
 
-export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+// export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type Announcement = typeof announcements.$inferSelect;
 
-export const insertAnnouncementInteractionSchema = createInsertSchema(announcementInteractions);
-export type InsertAnnouncementInteraction = z.infer<typeof insertAnnouncementInteractionSchema>;
+// \export const insertAnnouncementInteractionSchema = createInsertSchema(announcementInteractions);
+// export type InsertAnnouncementInteraction = z.infer<typeof insertAnnouncementInteractionSchema>;
 export type AnnouncementInteraction = typeof announcementInteractions.$inferSelect;
 
 // Types for Footer Configuration
-export const insertFooterConfigSchema = createInsertSchema(footerConfig);
-export type InsertFooterConfig = z.infer<typeof insertFooterConfigSchema>;
+// \export const insertFooterConfigSchema = createInsertSchema(footerConfig);
+// export type InsertFooterConfig = z.infer<typeof insertFooterConfigSchema>;
 export type FooterConfig = typeof footerConfig.$inferSelect;
 
 // Schemas
@@ -2580,7 +2502,7 @@ export const generatedDocuments = pgTable("generated_documents", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
   templateId: integer("template_id").references(() => documentTemplates.id),
-  businessEntityId: varchar("business_entity_id").references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").references(() => businessEntities.id),
   documentName: varchar("document_name").notNull(),
   documentType: varchar("document_type").notNull(),
   formData: text("form_data").notNull(), // JSON of user inputs
@@ -2637,49 +2559,49 @@ export const aiDocumentSuggestions = pgTable("ai_document_suggestions", {
 });
 
 // Insert schemas for document automation
-export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertGeneratedDocumentSchema = createInsertSchema(generatedDocuments).omit({
-  id: true,
-  lastModified: true,
-  createdAt: true
-});
+// export const insertGeneratedDocumentSchema = createInsertSchema(generatedDocuments).omit({
+//   id: true,
+//   lastModified: true,
+//   createdAt: true
+// });
 
-export const insertDocumentRevisionSchema = createInsertSchema(documentRevisions).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertDocumentRevisionSchema = createInsertSchema(documentRevisions).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertDocumentTemplateFieldSchema = createInsertSchema(documentTemplateFields).omit({
-  id: true
-});
+// export const insertDocumentTemplateFieldSchema = createInsertSchema(documentTemplateFields).omit({
+//   id: true
+// });
 
-export const insertAiDocumentSuggestionSchema = createInsertSchema(aiDocumentSuggestions).omit({
-  id: true,
-  appliedAt: true,
-  createdAt: true
-});
+// export const insertAiDocumentSuggestionSchema = createInsertSchema(aiDocumentSuggestions).omit({
+//   id: true,
+//   appliedAt: true,
+//   createdAt: true
+// });
 
 // Types for document automation
 export type DocumentTemplate = typeof documentTemplates.$inferSelect;
-export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
+// export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
 export type GeneratedDocument = typeof generatedDocuments.$inferSelect;
-export type InsertGeneratedDocument = z.infer<typeof insertGeneratedDocumentSchema>;
+// export type InsertGeneratedDocument = z.infer<typeof insertGeneratedDocumentSchema>;
 export type DocumentRevision = typeof documentRevisions.$inferSelect;
-export type InsertDocumentRevision = z.infer<typeof insertDocumentRevisionSchema>;
+// export type InsertDocumentRevision = z.infer<typeof insertDocumentRevisionSchema>;
 export type DocumentTemplateField = typeof documentTemplateFields.$inferSelect;
-export type InsertDocumentTemplateField = z.infer<typeof insertDocumentTemplateFieldSchema>;
+// export type InsertDocumentTemplateField = z.infer<typeof insertDocumentTemplateFieldSchema>;
 export type AiDocumentSuggestion = typeof aiDocumentSuggestions.$inferSelect;
-export type InsertAiDocumentSuggestion = z.infer<typeof insertAiDocumentSuggestionSchema>;
+// export type InsertAiDocumentSuggestion = z.infer<typeof insertAiDocumentSuggestionSchema>;
 
 // Business License Services Tables
 export const businessProfiles = pgTable("business_profiles", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id", { length: 12 }).notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   industryType: varchar("industry_type").notNull(), // NAICS code or industry classification
   businessActivities: text("business_activities").array().notNull(), // Specific activities performed
   operatingLocations: text("operating_locations").array().notNull(), // Cities, counties, states where business operates
@@ -2756,7 +2678,7 @@ export const licenseRenewals = pgTable("license_renewals", {
 
 export const licenseVerifications = pgTable("license_verifications", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   verificationProvider: varchar("verification_provider").notNull(), // middesk, signzy, etc.
   verificationResult: text("verification_result"), // JSON response from API
   existingLicenses: text("existing_licenses"), // JSON array of found licenses
@@ -2784,56 +2706,56 @@ export const complianceAlerts = pgTable("compliance_alerts", {
 });
 
 // Insert schemas for business license services
-export const insertBusinessProfileSchema = createInsertSchema(businessProfiles).omit({
-  id: true,
-  profileStatus: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBusinessProfileSchema = createInsertSchema(businessProfiles).omit({
+//   id: true,
+//   profileStatus: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertLicenseRequirementSchema = createInsertSchema(licenseRequirements).omit({
-  id: true,
-  discoveredAt: true,
-  lastVerified: true
-});
+// export const insertLicenseRequirementSchema = createInsertSchema(licenseRequirements).omit({
+//   id: true,
+//   discoveredAt: true,
+//   lastVerified: true
+// });
 
-export const insertLicenseApplicationSchema = createInsertSchema(licenseApplications).omit({
-  id: true,
-  remindersSent: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertLicenseApplicationSchema = createInsertSchema(licenseApplications).omit({
+//   id: true,
+//   remindersSent: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertLicenseRenewalSchema = createInsertSchema(licenseRenewals).omit({
-  id: true,
-  reminderScheduled: true,
-  remindersSent: true,
-  createdAt: true
-});
+// export const insertLicenseRenewalSchema = createInsertSchema(licenseRenewals).omit({
+//   id: true,
+//   reminderScheduled: true,
+//   remindersSent: true,
+//   createdAt: true
+// });
 
-export const insertLicenseVerificationSchema = createInsertSchema(licenseVerifications).omit({
-  id: true,
-  lastVerificationDate: true
-});
+// export const insertLicenseVerificationSchema = createInsertSchema(licenseVerifications).omit({
+//   id: true,
+//   lastVerificationDate: true
+// });
 
-export const insertComplianceAlertSchema = createInsertSchema(complianceAlerts).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertComplianceAlertSchema = createInsertSchema(complianceAlerts).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 // Types for business license services
 export type BusinessProfile = typeof businessProfiles.$inferSelect;
-export type InsertBusinessProfile = z.infer<typeof insertBusinessProfileSchema>;
+// export type InsertBusinessProfile = z.infer<typeof insertBusinessProfileSchema>;
 export type LicenseRequirement = typeof licenseRequirements.$inferSelect;
-export type InsertLicenseRequirement = z.infer<typeof insertLicenseRequirementSchema>;
+// export type InsertLicenseRequirement = z.infer<typeof insertLicenseRequirementSchema>;
 export type LicenseApplication = typeof licenseApplications.$inferSelect;
-export type InsertLicenseApplication = z.infer<typeof insertLicenseApplicationSchema>;
+// export type InsertLicenseApplication = z.infer<typeof insertLicenseApplicationSchema>;
 export type LicenseRenewal = typeof licenseRenewals.$inferSelect;
-export type InsertLicenseRenewal = z.infer<typeof insertLicenseRenewalSchema>;
+// export type InsertLicenseRenewal = z.infer<typeof insertLicenseRenewalSchema>;
 export type LicenseVerification = typeof licenseVerifications.$inferSelect;
-export type InsertLicenseVerification = z.infer<typeof insertLicenseVerificationSchema>;
+// export type InsertLicenseVerification = z.infer<typeof insertLicenseVerificationSchema>;
 export type ComplianceAlert = typeof complianceAlerts.$inferSelect;
-export type InsertComplianceAlert = z.infer<typeof insertComplianceAlertSchema>;
+// export type InsertComplianceAlert = z.infer<typeof insertComplianceAlertSchema>;
 
 // Digital Mailbox Services Tables
 export const virtualMailboxAddresses = pgTable("virtual_mailbox_addresses", {
@@ -2858,7 +2780,7 @@ export const virtualMailboxAddresses = pgTable("virtual_mailbox_addresses", {
 
 export const mailboxSubscriptions = pgTable("mailbox_subscriptions", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   virtualAddressId: integer("virtual_address_id").notNull().references(() => virtualMailboxAddresses.id),
   subscriptionStatus: varchar("subscription_status").default("active"), // active, suspended, cancelled
   startDate: timestamp("start_date").notNull(),
@@ -2964,331 +2886,318 @@ export const digitalArchive = pgTable("digital_archive", {
 });
 
 // Insert schemas for digital mailbox services
-export const insertVirtualMailboxAddressSchema = createInsertSchema(virtualMailboxAddresses).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertVirtualMailboxAddressSchema = createInsertSchema(virtualMailboxAddresses).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertMailboxSubscriptionSchema = createInsertSchema(mailboxSubscriptions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertMailboxSubscriptionSchema = createInsertSchema(mailboxSubscriptions).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertReceivedMailSchema = createInsertSchema(receivedMail).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertReceivedMailSchema = createInsertSchema(receivedMail).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertMailActionSchema = createInsertSchema(mailActions).omit({
-  id: true,
-  requestedAt: true
-});
+// export const insertMailActionSchema = createInsertSchema(mailActions).omit({
+//   id: true,
+//   requestedAt: true
+// });
 
-export const insertMailNotificationSchema = createInsertSchema(mailNotifications).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertMailNotificationSchema = createInsertSchema(mailNotifications).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertDigitalArchiveSchema = createInsertSchema(digitalArchive).omit({
-  id: true,
-  archivedAt: true
-});
+// export const insertDigitalArchiveSchema = createInsertSchema(digitalArchive).omit({
+//   id: true,
+//   archivedAt: true
+// });
 
 // Types for digital mailbox services
 export type VirtualMailboxAddress = typeof virtualMailboxAddresses.$inferSelect;
-export type InsertVirtualMailboxAddress = z.infer<typeof insertVirtualMailboxAddressSchema>;
+// export type InsertVirtualMailboxAddress = z.infer<typeof insertVirtualMailboxAddressSchema>;
 export type MailboxSubscription = typeof mailboxSubscriptions.$inferSelect;
-export type InsertMailboxSubscription = z.infer<typeof insertMailboxSubscriptionSchema>;
+// export type InsertMailboxSubscription = z.infer<typeof insertMailboxSubscriptionSchema>;
 export type ReceivedMail = typeof receivedMail.$inferSelect;
-export type InsertReceivedMail = z.infer<typeof insertReceivedMailSchema>;
+// export type InsertReceivedMail = z.infer<typeof insertReceivedMailSchema>;
 export type MailAction = typeof mailActions.$inferSelect;
-export type InsertMailAction = z.infer<typeof insertMailActionSchema>;
+// export type InsertMailAction = z.infer<typeof insertMailActionSchema>;
 export type MailNotification = typeof mailNotifications.$inferSelect;
-export type InsertMailNotification = z.infer<typeof insertMailNotificationSchema>;
+// export type InsertMailNotification = z.infer<typeof insertMailNotificationSchema>;
 export type DigitalArchive = typeof digitalArchive.$inferSelect;
-export type InsertDigitalArchive = z.infer<typeof insertDigitalArchiveSchema>;
+// export type InsertDigitalArchive = z.infer<typeof insertDigitalArchiveSchema>;
 
-export const insertBusinessEntitySchema = createInsertSchema(businessEntities).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-}).extend({
-  name: z.string().optional(),
-  state: z.string().optional(),
-  entityType: z.string().optional(),
-  parValuePerShare: z.union([z.string(), z.number()]).optional().transform((val) => 
-    val === undefined || val === null ? undefined : String(val)
-  )
-});
+// Business entity schemas moved to end of file after table definition
 
-export const updateBusinessEntitySchema = insertBusinessEntitySchema.partial();
-
-export type InsertBusinessEntity = z.infer<typeof insertBusinessEntitySchema>;
-export type UpdateBusinessEntity = z.infer<typeof updateBusinessEntitySchema>;
-export type BusinessEntity = typeof businessEntities.$inferSelect;
+// export type InsertBusinessEntity = z.infer<typeof insertBusinessEntitySchema>;
+// export type UpdateBusinessEntity = z.infer<typeof updateBusinessEntitySchema>;
+// BusinessEntity type moved to end of file
 
 // Registered Agent schemas
-export const insertRegisteredAgentAddressSchema = createInsertSchema(registeredAgentAddresses).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertRegisteredAgentAddressSchema = createInsertSchema(registeredAgentAddresses).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertRegisteredAgentConsentSchema = createInsertSchema(registeredAgentConsent).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertRegisteredAgentConsentSchema = createInsertSchema(registeredAgentConsent).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertReceivedDocumentSchema = createInsertSchema(receivedDocuments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertReceivedDocumentSchema = createInsertSchema(receivedDocuments).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertDocumentAuditLogSchema = createInsertSchema(documentAuditLog).omit({
-  id: true,
-  timestamp: true
-});
+// export const insertDocumentAuditLogSchema = createInsertSchema(documentAuditLog).omit({
+//   id: true,
+//   timestamp: true
+// });
 
 // Virtual mailbox schemas
-export const insertVirtualMailboxConfigSchema = createInsertSchema(virtualMailboxConfig).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertVirtualMailboxConfigSchema = createInsertSchema(virtualMailboxConfig).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
 // EIN schemas
-export const insertEinApplicationSchema = createInsertSchema(einApplications).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertEinApplicationSchema = createInsertSchema(einApplications).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertEinVerificationSchema = createInsertSchema(einVerifications).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertEinVerificationSchema = createInsertSchema(einVerifications).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 // BOIR schemas
-export const insertBoirFilingSchema = createInsertSchema(boirFilings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBoirFilingSchema = createInsertSchema(boirFilings).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertBeneficialOwnerSchema = createInsertSchema(beneficialOwners).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBeneficialOwnerSchema = createInsertSchema(beneficialOwners).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertCompanyApplicantSchema = createInsertSchema(companyApplicants).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertCompanyApplicantSchema = createInsertSchema(companyApplicants).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertBoirAuditLogSchema = createInsertSchema(boirAuditLog).omit({
-  id: true,
-  timestamp: true
-});
+// export const insertBoirAuditLogSchema = createInsertSchema(boirAuditLog).omit({
+//   id: true,
+//   timestamp: true
+// });
 
 export type RegisteredAgentAddress = typeof registeredAgentAddresses.$inferSelect;
-export type InsertRegisteredAgentAddress = z.infer<typeof insertRegisteredAgentAddressSchema>;
+// export type InsertRegisteredAgentAddress = z.infer<typeof insertRegisteredAgentAddressSchema>;
 export type RegisteredAgentConsent = typeof registeredAgentConsent.$inferSelect;
-export type InsertRegisteredAgentConsent = z.infer<typeof insertRegisteredAgentConsentSchema>;
+// export type InsertRegisteredAgentConsent = z.infer<typeof insertRegisteredAgentConsentSchema>;
 export type ReceivedDocument = typeof receivedDocuments.$inferSelect;
-export type InsertReceivedDocument = z.infer<typeof insertReceivedDocumentSchema>;
+// export type InsertReceivedDocument = z.infer<typeof insertReceivedDocumentSchema>;
 export type DocumentAuditLog = typeof documentAuditLog.$inferSelect;
-export type InsertDocumentAuditLog = z.infer<typeof insertDocumentAuditLogSchema>;
+// export type InsertDocumentAuditLog = z.infer<typeof insertDocumentAuditLogSchema>;
 export type VirtualMailboxConfig = typeof virtualMailboxConfig.$inferSelect;
-export type InsertVirtualMailboxConfig = z.infer<typeof insertVirtualMailboxConfigSchema>;
+// export type InsertVirtualMailboxConfig = z.infer<typeof insertVirtualMailboxConfigSchema>;
 export type EinApplication = typeof einApplications.$inferSelect;
-export type InsertEinApplication = z.infer<typeof insertEinApplicationSchema>;
+// export type InsertEinApplication = z.infer<typeof insertEinApplicationSchema>;
 export type EinVerification = typeof einVerifications.$inferSelect;
-export type InsertEinVerification = z.infer<typeof insertEinVerificationSchema>;
+// export type InsertEinVerification = z.infer<typeof insertEinVerificationSchema>;
 export type BoirFiling = typeof boirFilings.$inferSelect;
-export type InsertBoirFiling = z.infer<typeof insertBoirFilingSchema>;
+// export type InsertBoirFiling = z.infer<typeof insertBoirFilingSchema>;
 export type BeneficialOwner = typeof beneficialOwners.$inferSelect;
-export type InsertBeneficialOwner = z.infer<typeof insertBeneficialOwnerSchema>;
+// export type InsertBeneficialOwner = z.infer<typeof insertBeneficialOwnerSchema>;
 export type CompanyApplicant = typeof companyApplicants.$inferSelect;
-export type InsertCompanyApplicant = z.infer<typeof insertCompanyApplicantSchema>;
+// export type InsertCompanyApplicant = z.infer<typeof insertCompanyApplicantSchema>;
 export type BoirAuditLog = typeof boirAuditLog.$inferSelect;
-export type InsertBoirAuditLog = z.infer<typeof insertBoirAuditLogSchema>;
+// export type InsertBoirAuditLog = z.infer<typeof insertBoirAuditLogSchema>;
 
 // S-Corporation Election schemas
-export const insertSCorpElectionSchema = createInsertSchema(sCorpElections).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertSCorpElectionSchema = createInsertSchema(sCorpElections).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertSCorpShareholderSchema = createInsertSchema(sCorpShareholders).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertSCorpShareholderSchema = createInsertSchema(sCorpShareholders).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertComplianceCalendarSchema = createInsertSchema(complianceCalendar).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertComplianceCalendarSchema = createInsertSchema(complianceCalendar).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertComplianceNotificationSchema = createInsertSchema(complianceNotifications).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertComplianceNotificationSchema = createInsertSchema(complianceNotifications).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 export type SCorpElection = typeof sCorpElections.$inferSelect;
-export type InsertSCorpElection = z.infer<typeof insertSCorpElectionSchema>;
+// export type InsertSCorpElection = z.infer<typeof insertSCorpElectionSchema>;
 export type SCorpShareholder = typeof sCorpShareholders.$inferSelect;
-export type InsertSCorpShareholder = z.infer<typeof insertSCorpShareholderSchema>;
+// export type InsertSCorpShareholder = z.infer<typeof insertSCorpShareholderSchema>;
 export type ComplianceCalendar = typeof complianceCalendar.$inferSelect;
-export type InsertComplianceCalendar = z.infer<typeof insertComplianceCalendarSchema>;
+// export type InsertComplianceCalendar = z.infer<typeof insertComplianceCalendarSchema>;
 export type ComplianceNotification = typeof complianceNotifications.$inferSelect;
-export type InsertComplianceNotification = z.infer<typeof insertComplianceNotificationSchema>;
+// export type InsertComplianceNotification = z.infer<typeof insertComplianceNotificationSchema>;
 
 // Annual Report types
-export const insertAnnualReportSchema = createInsertSchema(annualReports).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertAnnualReportSchema = createInsertSchema(annualReports).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertStateFilingRequirementSchema = createInsertSchema(stateFilingRequirements).omit({
-  id: true,
-  createdAt: true,
-  lastUpdated: true
-});
+// export const insertStateFilingRequirementSchema = createInsertSchema(stateFilingRequirements).omit({
+//   id: true,
+//   createdAt: true,
+//   lastUpdated: true
+// });
 
-export const insertAnnualReportReminderSchema = createInsertSchema(annualReportReminders).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertAnnualReportReminderSchema = createInsertSchema(annualReportReminders).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertAnnualReportTemplateSchema = createInsertSchema(annualReportTemplates).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertAnnualReportTemplateSchema = createInsertSchema(annualReportTemplates).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 export type AnnualReport = typeof annualReports.$inferSelect;
-export type InsertAnnualReport = z.infer<typeof insertAnnualReportSchema>;
+// export type InsertAnnualReport = z.infer<typeof insertAnnualReportSchema>;
 export type StateFilingRequirement = typeof stateFilingRequirements.$inferSelect;
-export type InsertStateFilingRequirement = z.infer<typeof insertStateFilingRequirementSchema>;
+// export type InsertStateFilingRequirement = z.infer<typeof insertStateFilingRequirementSchema>;
 export type AnnualReportReminder = typeof annualReportReminders.$inferSelect;
-export type InsertAnnualReportReminder = z.infer<typeof insertAnnualReportReminderSchema>;
+// export type InsertAnnualReportReminder = z.infer<typeof insertAnnualReportReminderSchema>;
 export type AnnualReportTemplate = typeof annualReportTemplates.$inferSelect;
-export type InsertAnnualReportTemplate = z.infer<typeof insertAnnualReportTemplateSchema>;
+// export type InsertAnnualReportTemplate = z.infer<typeof insertAnnualReportTemplateSchema>;
 
 // Name Change schemas
-export const insertNameChangeRequestSchema = createInsertSchema(nameChangeRequests).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertNameChangeRequestSchema = createInsertSchema(nameChangeRequests).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertNameChangeDocumentSchema = createInsertSchema(nameChangeDocuments).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertNameChangeDocumentSchema = createInsertSchema(nameChangeDocuments).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertNameChangeWorkflowTaskSchema = createInsertSchema(nameChangeWorkflowTasks).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertNameChangeWorkflowTaskSchema = createInsertSchema(nameChangeWorkflowTasks).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertBusinessLicenseSchema = createInsertSchema(businessLicenses).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBusinessLicenseSchema = createInsertSchema(businessLicenses).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertNameChangeTemplateSchema = createInsertSchema(nameChangeTemplates).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertNameChangeTemplateSchema = createInsertSchema(nameChangeTemplates).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 export type NameChangeRequest = typeof nameChangeRequests.$inferSelect;
-export type InsertNameChangeRequest = z.infer<typeof insertNameChangeRequestSchema>;
+// export type InsertNameChangeRequest = z.infer<typeof insertNameChangeRequestSchema>;
 export type NameChangeDocument = typeof nameChangeDocuments.$inferSelect;
-export type InsertNameChangeDocument = z.infer<typeof insertNameChangeDocumentSchema>;
+// export type InsertNameChangeDocument = z.infer<typeof insertNameChangeDocumentSchema>;
 export type NameChangeWorkflowTask = typeof nameChangeWorkflowTasks.$inferSelect;
-export type InsertNameChangeWorkflowTask = z.infer<typeof insertNameChangeWorkflowTaskSchema>;
+// export type InsertNameChangeWorkflowTask = z.infer<typeof insertNameChangeWorkflowTaskSchema>;
 export type BusinessLicense = typeof businessLicenses.$inferSelect;
-export type InsertBusinessLicense = z.infer<typeof insertBusinessLicenseSchema>;
+// export type InsertBusinessLicense = z.infer<typeof insertBusinessLicenseSchema>;
 export type NameChangeTemplate = typeof nameChangeTemplates.$inferSelect;
-export type InsertNameChangeTemplate = z.infer<typeof insertNameChangeTemplateSchema>;
+// export type InsertNameChangeTemplate = z.infer<typeof insertNameChangeTemplateSchema>;
 
 // Business Dissolution schemas
-export const insertBusinessDissolutionSchema = createInsertSchema(businessDissolutions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBusinessDissolutionSchema = createInsertSchema(businessDissolutions).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertDissolutionTaskSchema = createInsertSchema(dissolutionTasks).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertDissolutionTaskSchema = createInsertSchema(dissolutionTasks).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertDissolutionDocumentSchema = createInsertSchema(dissolutionDocuments).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertDissolutionDocumentSchema = createInsertSchema(dissolutionDocuments).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertDissolutionChecklistSchema = createInsertSchema(dissolutionChecklists).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertDissolutionChecklistSchema = createInsertSchema(dissolutionChecklists).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertDissolutionTimelineSchema = createInsertSchema(dissolutionTimeline).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertDissolutionTimelineSchema = createInsertSchema(dissolutionTimeline).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertDissolutionTemplateSchema = createInsertSchema(dissolutionTemplates).omit({
-  id: true,
-  createdAt: true,
-  lastUpdated: true
-});
+// export const insertDissolutionTemplateSchema = createInsertSchema(dissolutionTemplates).omit({
+//   id: true,
+//   createdAt: true,
+//   lastUpdated: true
+// });
 
 export type BusinessDissolution = typeof businessDissolutions.$inferSelect;
-export type InsertBusinessDissolution = z.infer<typeof insertBusinessDissolutionSchema>;
+// export type InsertBusinessDissolution = z.infer<typeof insertBusinessDissolutionSchema>;
 export type DissolutionTask = typeof dissolutionTasks.$inferSelect;
-export type InsertDissolutionTask = z.infer<typeof insertDissolutionTaskSchema>;
+// export type InsertDissolutionTask = z.infer<typeof insertDissolutionTaskSchema>;
 export type DissolutionDocument = typeof dissolutionDocuments.$inferSelect;
-export type InsertDissolutionDocument = z.infer<typeof insertDissolutionDocumentSchema>;
+// export type InsertDissolutionDocument = z.infer<typeof insertDissolutionDocumentSchema>;
 export type DissolutionChecklist = typeof dissolutionChecklists.$inferSelect;
-export type InsertDissolutionChecklist = z.infer<typeof insertDissolutionChecklistSchema>;
+// export type InsertDissolutionChecklist = z.infer<typeof insertDissolutionChecklistSchema>;
 export type DissolutionTimeline = typeof dissolutionTimeline.$inferSelect;
-export type InsertDissolutionTimeline = z.infer<typeof insertDissolutionTimelineSchema>;
+// export type InsertDissolutionTimeline = z.infer<typeof insertDissolutionTimelineSchema>;
 export type DissolutionTemplate = typeof dissolutionTemplates.$inferSelect;
-export type InsertDissolutionTemplate = z.infer<typeof insertDissolutionTemplateSchema>;
+// export type InsertDissolutionTemplate = z.infer<typeof insertDissolutionTemplateSchema>;
 
 // Mailbox subscription schemas
-export const insertMailboxPlanSchema = createInsertSchema(mailboxPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertMailboxPlanSchema = createInsertSchema(mailboxPlans).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertUserMailboxSubscriptionSchema = createInsertSchema(userMailboxSubscriptions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertUserMailboxSubscriptionSchema = createInsertSchema(userMailboxSubscriptions).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
 export type MailboxPlan = typeof mailboxPlans.$inferSelect;
-export type InsertMailboxPlan = z.infer<typeof insertMailboxPlanSchema>;
+// export type InsertMailboxPlan = z.infer<typeof insertMailboxPlanSchema>;
 
 export type UserMailboxSubscription = typeof userMailboxSubscriptions.$inferSelect;
-export type InsertUserMailboxSubscription = z.infer<typeof insertUserMailboxSubscriptionSchema>;
+export type InsertUserMailboxSubscription = typeof userMailboxSubscriptions.$inferInsert;
 
 // AI-powered features database tables
 export const userBehaviorSessions = pgTable("user_behavior_sessions", {
@@ -3395,28 +3304,28 @@ export type VoiceInteraction = typeof voiceInteractions.$inferSelect;
 export type FraudAnalysis = typeof fraudAnalysis.$inferSelect;
 
 // OTP (One-Time Password) schemas
-export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertOtpPreferencesSchema = createInsertSchema(otpPreferences).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertOtpPreferencesSchema = createInsertSchema(otpPreferences).omit({
+//   id: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertTrustedDeviceSchema = createInsertSchema(trustedDevices).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertTrustedDeviceSchema = createInsertSchema(trustedDevices).omit({
+//   id: true,
+//   createdAt: true
+// });
 
 export type OtpVerification = typeof otpVerifications.$inferSelect;
-export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
+// export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
 export type OtpPreferences = typeof otpPreferences.$inferSelect;
-export type InsertOtpPreferences = z.infer<typeof insertOtpPreferencesSchema>;
+// export type InsertOtpPreferences = z.infer<typeof insertOtpPreferencesSchema>;
 export type TrustedDevice = typeof trustedDevices.$inferSelect;
-export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
+// export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
 
 // Document Request Tables
 export const documentRequests = pgTable("document_requests", {
@@ -3454,25 +3363,25 @@ export const documentRequestHistory = pgTable("document_request_history", {
 });
 
 // Insert schemas for document requests
-export const insertDocumentRequestSchema = createInsertSchema(documentRequests).omit({
-  id: true,
-  status: true,
-  uploadedAt: true,
-  reviewedAt: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertDocumentRequestSchema = createInsertSchema(documentRequests).omit({
+//   id: true,
+//   status: true,
+//   uploadedAt: true,
+//   reviewedAt: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertDocumentRequestHistorySchema = createInsertSchema(documentRequestHistory).omit({
-  id: true,
-  timestamp: true
-});
+// export const insertDocumentRequestHistorySchema = createInsertSchema(documentRequestHistory).omit({
+//   id: true,
+//   timestamp: true
+// });
 
 // Types for document requests
 export type DocumentRequest = typeof documentRequests.$inferSelect;
-export type InsertDocumentRequest = z.infer<typeof insertDocumentRequestSchema>;
+export type InsertDocumentRequest = typeof documentRequests.$inferInsert;
 export type DocumentRequestHistory = typeof documentRequestHistory.$inferSelect;
-export type InsertDocumentRequestHistory = z.infer<typeof insertDocumentRequestHistorySchema>;
+// export type InsertDocumentRequestHistory = z.infer<typeof insertDocumentRequestHistorySchema>;
 
 // Payment Methods table for Stripe integration
 export const paymentMethods = pgTable("payment_methods", {
@@ -3518,25 +3427,25 @@ export type PaymentMethod = typeof paymentMethods.$inferSelect;
 export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
 
 // Create schema for validation
-export const insertPaymentMethodSchema = createInsertSchema(paymentMethods);
-export const newPaymentMethodSchema = insertPaymentMethodSchema.extend({
-  cardNumber: z.string().min(13).max(19),
-  expMonth: z.string().regex(/^(0[1-9]|1[0-2])$/),
-  expYear: z.string().regex(/^\d{4}$/),
-  cvc: z.string().min(3).max(4),
-  name: z.string().min(1),
-  line1: z.string().min(1),
-  line2: z.string().optional(),
-  city: z.string().min(1),
-  state: z.string().min(1),
-  postal_code: z.string().min(1),
-  country: z.string().min(2).max(2)
-});
+// \export const insertPaymentMethodSchema = createInsertSchema(paymentMethods);
+// export const newPaymentMethodSchema = insertPaymentMethodSchema.extend({
+//   cardNumber: z.string().min(13).max(19),
+//   expMonth: z.string().regex(/^(0[1-9]|1[0-2])$/),
+//   expYear: z.string().regex(/^\d{4}$/),
+//   cvc: z.string().min(3).max(4),
+//   name: z.string().min(1),
+//   line1: z.string().min(1),
+//   line2: z.string().optional(),
+//   city: z.string().min(1),
+//   state: z.string().min(1),
+//   postal_code: z.string().min(1),
+//   country: z.string().min(2).max(2)
+// });
 
 // Bookkeeping Services Tables
 export const bookkeepingSubscriptions = pgTable("bookkeeping_subscriptions", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   planType: varchar("plan_type").notNull(), // basic, standard, premium
   status: varchar("status").default("active"), // active, suspended, cancelled
   monthlyFee: integer("monthly_fee").notNull(), // Fee in cents
@@ -3553,7 +3462,7 @@ export const bookkeepingSubscriptions = pgTable("bookkeeping_subscriptions", {
 
 export const bookkeepingDocuments = pgTable("bookkeeping_documents", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   fileName: varchar("file_name").notNull(),
   originalFileName: varchar("original_file_name").notNull(),
   fileType: varchar("file_type").notNull(), // pdf, jpg, png, csv, xlsx
@@ -3595,7 +3504,7 @@ export const bookkeepingCategories = pgTable("bookkeeping_categories", {
 
 export const bookkeepingReports = pgTable("bookkeeping_reports", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   reportType: varchar("report_type").notNull(), // monthly_summary, quarterly_report, annual_summary, tax_preparation
   reportPeriodStart: timestamp("report_period_start").notNull(),
   reportPeriodEnd: timestamp("report_period_end").notNull(),
@@ -3629,52 +3538,52 @@ export const bookkeepingPlans = pgTable("bookkeeping_plans", {
 });
 
 // Insert schemas for bookkeeping services
-export const insertBookkeepingSubscriptionSchema = createInsertSchema(bookkeepingSubscriptions).omit({
-  id: true,
-  documentsProcessed: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBookkeepingSubscriptionSchema = createInsertSchema(bookkeepingSubscriptions).omit({
+//   id: true,
+//   documentsProcessed: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertBookkeepingDocumentSchema = createInsertSchema(bookkeepingDocuments).omit({
-  id: true,
-  uploadDate: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBookkeepingDocumentSchema = createInsertSchema(bookkeepingDocuments).omit({
+//   id: true,
+//   uploadDate: true,
+//   createdAt: true,
+//   updatedAt: true
+// });
 
-export const insertBookkeepingCategorySchema = createInsertSchema(bookkeepingCategories).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertBookkeepingCategorySchema = createInsertSchema(bookkeepingCategories).omit({
+//   id: true,
+//   createdAt: true
+// });
 
-export const insertBookkeepingReportSchema = createInsertSchema(bookkeepingReports).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertBookkeepingReportSchema = createInsertSchema(bookkeepingReports).omit({
+//    id: true,
+//    createdAt: true
+// });
 
-export const insertBookkeepingPlanSchema = createInsertSchema(bookkeepingPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBookkeepingPlanSchema = createInsertSchema(bookkeepingPlans).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
 // Types for bookkeeping services
 export type BookkeepingSubscription = typeof bookkeepingSubscriptions.$inferSelect;
-export type InsertBookkeepingSubscription = z.infer<typeof insertBookkeepingSubscriptionSchema>;
+// export type InsertBookkeepingSubscription = z.infer<typeof insertBookkeepingSubscriptionSchema>;
 export type BookkeepingDocument = typeof bookkeepingDocuments.$inferSelect;
-export type InsertBookkeepingDocument = z.infer<typeof insertBookkeepingDocumentSchema>;
+export type InsertBookkeepingDocument = typeof bookkeepingDocuments.$inferInsert;
 export type BookkeepingCategory = typeof bookkeepingCategories.$inferSelect;
-export type InsertBookkeepingCategory = z.infer<typeof insertBookkeepingCategorySchema>;
+// export type InsertBookkeepingCategory = z.infer<typeof insertBookkeepingCategorySchema>;
 export type BookkeepingReport = typeof bookkeepingReports.$inferSelect;
-export type InsertBookkeepingReport = z.infer<typeof insertBookkeepingReportSchema>;
+// export type InsertBookkeepingReport = z.infer<typeof insertBookkeepingReportSchema>;
 export type BookkeepingPlan = typeof bookkeepingPlans.$inferSelect;
-export type InsertBookkeepingPlan = z.infer<typeof insertBookkeepingPlanSchema>;
+// export type InsertBookkeepingPlan = z.infer<typeof insertBookkeepingPlanSchema>;
 
 // Payroll Services Tables
 export const payrollSubscriptions = pgTable("payroll_subscriptions", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   planName: varchar("plan_name").notNull(),
   status: varchar("status").notNull().default("active"), // active, trial, pending_renewal, cancelled
   renewalDate: timestamp("renewal_date").notNull(),
@@ -3693,7 +3602,7 @@ export const payrollSubscriptions = pgTable("payroll_subscriptions", {
 
 export const payrollDocuments = pgTable("payroll_documents", {
   id: serial("id").primaryKey(),
-  businessEntityId: varchar("business_entity_id").notNull().references(() => businessEntities.id),
+  businessEntityId: integer("business_entity_id").notNull().references(() => businessEntities.id),
   fileName: varchar("file_name").notNull(),
   originalFileName: varchar("original_file_name").notNull(),
   documentType: varchar("document_type").notNull(), // timesheet, w4, bank_statement, company_policy, payroll_report, tax_document, other
@@ -3713,23 +3622,23 @@ export const payrollDocuments = pgTable("payroll_documents", {
 });
 
 // Insert schemas for payroll services
-export const insertPayrollSubscriptionSchema = createInsertSchema(payrollSubscriptions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertPayrollSubscriptionSchema = createInsertSchema(payrollSubscriptions).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
-export const insertPayrollDocumentSchema = createInsertSchema(payrollDocuments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertPayrollDocumentSchema = createInsertSchema(payrollDocuments).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
 // Types for payroll services
 export type PayrollSubscription = typeof payrollSubscriptions.$inferSelect;
-export type InsertPayrollSubscription = z.infer<typeof insertPayrollSubscriptionSchema>;
+// export type InsertPayrollSubscription = z.infer<typeof insertPayrollSubscriptionSchema>;
 export type PayrollDocument = typeof payrollDocuments.$inferSelect;
-export type InsertPayrollDocument = z.infer<typeof insertPayrollDocumentSchema>;
+export type InsertPayrollDocument = typeof payrollDocuments.$inferInsert;
 
 // Payroll Plans Table
 export const payrollPlans = pgTable("payroll_plans", {
@@ -3748,31 +3657,31 @@ export const payrollPlans = pgTable("payroll_plans", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-export const insertPayrollPlanSchema = createInsertSchema(payrollPlans);
+// export const insertPayrollPlanSchema = createInsertSchema(payrollPlans);
 export type PayrollPlan = typeof payrollPlans.$inferSelect;
-export type InsertPayrollPlan = z.infer<typeof insertPayrollPlanSchema>;
+// export type InsertPayrollPlan = z.infer<typeof insertPayrollPlanSchema>;
 
 // Registered Agent Plans types and validation
-export const insertRegisteredAgentPlanSchema = createInsertSchema(registeredAgentPlans, {
-  yearlyPrice: z.string().min(1, "Yearly price is required"),
-  expeditedPrice: z.string().optional(),
-  name: z.string().min(1, "Plan name is required"),
-  states: z.array(z.string()).min(1, "Select at least one state or use 'Select All 50 States'"),
-  features: z.array(z.string()).min(1, "At least one feature is required")
-});
+// export const insertRegisteredAgentPlanSchema = createInsertSchema(registeredAgentPlans, {
+//    yearlyPrice: z.string().min(1, "Yearly price is required"),
+//    expeditedPrice: z.string().optional(),
+//    name: z.string().min(1, "Plan name is required"),
+//    states: z.array(z.string()).min(1, "Select at least one state or use 'Select All 50 States'"),
+//    features: z.array(z.string()).min(1, "At least one feature is required")
+// });
 
 export type RegisteredAgentPlan = typeof registeredAgentPlans.$inferSelect;
-export type InsertRegisteredAgentPlan = z.infer<typeof insertRegisteredAgentPlanSchema>;
+// export type InsertRegisteredAgentPlan = z.infer<typeof insertRegisteredAgentPlanSchema>;
 
 // Document schemas and types
-export const insertDocumentSchema = createInsertSchema(documents).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertDocumentSchema = createInsertSchema(documents).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
 export type Document = typeof documents.$inferSelect;
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+// export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
 // Type-safe error handling utility
 export function isError(error: unknown): error is Error {
@@ -3787,32 +3696,32 @@ export function getErrorMessage(error: unknown): string {
 }
 
 // Business Health Radar Zod schemas and types
-export const insertBusinessHealthMetricsSchema = createInsertSchema(businessHealthMetrics).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBusinessHealthMetricsSchema = createInsertSchema(businessHealthMetrics).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
-export const insertBusinessHealthInsightsSchema = createInsertSchema(businessHealthInsights).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// export const insertBusinessHealthInsightsSchema = createInsertSchema(businessHealthInsights).omit({
+//    id: true,
+//    createdAt: true,
+//    updatedAt: true
+// });
 
-export const insertBusinessHealthTrendsSchema = createInsertSchema(businessHealthTrends).omit({
-  id: true,
-  createdAt: true
-});
+// export const insertBusinessHealthTrendsSchema = createInsertSchema(businessHealthTrends).omit({
+//    id: true,
+//    createdAt: true
+// });
 
 // Business Health Radar Types
 export type BusinessHealthMetrics = typeof businessHealthMetrics.$inferSelect;
-export type InsertBusinessHealthMetrics = z.infer<typeof insertBusinessHealthMetricsSchema>;
+// export type InsertBusinessHealthMetrics = z.infer<typeof insertBusinessHealthMetricsSchema>;
 
 export type BusinessHealthInsights = typeof businessHealthInsights.$inferSelect;
-export type InsertBusinessHealthInsights = z.infer<typeof insertBusinessHealthInsightsSchema>;
+// export type InsertBusinessHealthInsights = z.infer<typeof insertBusinessHealthInsightsSchema>;
 
 export type BusinessHealthTrends = typeof businessHealthTrends.$inferSelect;
-export type InsertBusinessHealthTrends = z.infer<typeof insertBusinessHealthTrendsSchema>;
+// export type InsertBusinessHealthTrends = z.infer<typeof insertBusinessHealthTrendsSchema>;
 
 // Safe type conversion utilities
 export function toStringId(id: number | string | null | undefined): string {
@@ -3832,3 +3741,61 @@ export function toNumberId(id: string | number | null | undefined): number {
   }
   return numId;
 }
+
+// Business entities table - essential fields for application functionality
+export const businessEntities = pgTable("business_entities", {
+  id: serial("id").primaryKey(),
+  name: varchar("name"),
+  userId: integer("user_id").references(() => users.id),
+  entityType: varchar("entity_type"),
+  state: varchar("state"),
+  status: varchar("status").notNull().default("draft"),
+  useParafortAgent: boolean("use_parafort_agent").default(false),
+  registeredAgent: varchar("registered_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export type BusinessEntity = typeof businessEntities.$inferSelect;
+export type InsertBusinessEntity = typeof businessEntities.$inferInsert;
+
+// Business entities relations - moved here after table definition
+export const businessEntitiesRelations = relations(businessEntities, ({ one, many }) => ({
+  user: one(users, {
+    fields: [businessEntities.userId],
+    references: [users.id]
+  }),
+  // Temporarily commented out to fix build issues
+  // subscriptionPlan: one(subscriptionPlans, {
+  //   fields: [businessEntities.subscriptionPlanId],
+  //   references: [subscriptionPlans.id]
+  // }),
+  agentConsent: one(registeredAgentConsent, {
+    fields: [businessEntities.id],
+    references: [registeredAgentConsent.businessEntityId]
+  }),
+  receivedDocuments: many(receivedDocuments),
+  einApplications: many(einApplications),
+  einVerifications: many(einVerifications),
+  boirFilings: many(boirFilings),
+  sCorpElections: many(sCorpElections),
+  complianceCalendarItems: many(complianceCalendar),
+  complianceNotifications: many(complianceNotifications),
+  annualReports: many(annualReports),
+  annualReportReminders: many(annualReportReminders),
+  nameChangeRequests: many(nameChangeRequests),
+  businessLicenses: many(businessLicenses)
+}));
+
+// Business entity schemas - manual definition to match current table structure
+export const insertBusinessEntitySchema = z.object({
+  name: z.string().optional(),
+  userId: z.number().optional(),
+  entityType: z.string().optional(),
+  state: z.string().optional(),
+  status: z.string().optional(),
+  useParafortAgent: z.boolean().optional(),
+  registeredAgent: z.string().optional()
+});
+
+export const updateBusinessEntitySchema = insertBusinessEntitySchema.partial();

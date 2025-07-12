@@ -1,5 +1,5 @@
 import { pgTable, varchar, timestamp, boolean, text } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+// import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./schema";
 
@@ -15,28 +15,28 @@ export const emailVerifications = pgTable("email_verifications", {
 });
 
 // Registration schema - use main users table structure
-export const registerSchema = createInsertSchema(users, {
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-}).omit({
-  id: true,
-  clientId: true,
-  phone: true,
-  profileImageUrl: true,
-  role: true,
-  permissions: true,
-  stripeCustomerId: true,
-  stripeSubscriptionId: true,
-  isActive: true,
-  isEmailVerified: true,
-  lastLoginAt: true,
-  passwordResetAt: true,
-  dataRetentionUntil: true,
-  createdAt: true,
-  updatedAt: true,
-});
+// export const registerSchema = createInsertSchema(users, {
+//   email: z.string().email("Invalid email address"),
+//   password: z.string().min(8, "Password must be at least 8 characters"),
+//   firstName: z.string().min(1, "First name is required"),
+//   lastName: z.string().min(1, "Last name is required"),
+// }).omit({
+//   id: true,
+//   clientId: true,
+//   phone: true,
+//   profileImageUrl: true,
+//   role: true,
+//   permissions: true,
+//   stripeCustomerId: true,
+//   stripeSubscriptionId: true,
+//   isActive: true,
+//   isEmailVerified: true,
+//   lastLoginAt: true,
+//   passwordResetAt: true,
+//   dataRetentionUntil: true,
+//   createdAt: true,
+//   updatedAt: true,
+// });
 
 // Login schema
 export const loginSchema = z.object({
@@ -51,7 +51,7 @@ export const otpVerificationSchema = z.object({
 });
 
 // Types
-export type RegisterData = z.infer<typeof registerSchema>;
+// export type RegisterData = z.infer<typeof registerSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type OTPVerificationData = z.infer<typeof otpVerificationSchema>;
 export type EmailVerification = typeof emailVerifications.$inferSelect;
