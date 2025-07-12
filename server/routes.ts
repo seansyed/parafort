@@ -2471,7 +2471,7 @@ If the question is not about business names, respond with: "I'm specifically des
         .from(businessEntities)
         .where(and(
           eq(businessEntities.id, entityId),
-          eq(businessEntities.userId, userId)
+          eq(businessEntities.userId, parseInt(userId, 10))
         ))
         .limit(1);
       
@@ -7006,6 +7006,7 @@ Provide accurate, actionable insights that help business owners understand their
   app.post('/api/compliance/generate-events/:businessId',  async (req, res) => {
     try {
       const { businessId } = req.params;
+      const numericBusinessId = parseInt(businessId, 10);
       const userId = req.session?.user?.id;
       
       if (!userId) {
@@ -13260,8 +13261,8 @@ Provide accurate, actionable insights that help business owners understand their
         .select()
         .from(businessEntities)
         .where(and(
-          eq(businessEntities.id, businessId),
-          eq(businessEntities.userId, userId)
+          eq(businessEntities.id, numericBusinessId),
+          eq(businessEntities.userId, parseInt(userId, 10))
         ))
         .limit(1);
 
@@ -13347,6 +13348,7 @@ Provide accurate, actionable insights that help business owners understand their
     try {
       const { businessId } = req.params;
       const userId = req.session?.user?.id;
+      const numericBusinessId = parseInt(businessId, 10);
 
       if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -13357,8 +13359,8 @@ Provide accurate, actionable insights that help business owners understand their
         .select()
         .from(businessEntities)
         .where(and(
-          eq(businessEntities.id, businessId),
-          eq(businessEntities.userId, userId)
+          eq(businessEntities.id, numericBusinessId),
+          eq(businessEntities.userId, parseInt(userId, 10))
         ))
         .limit(1);
 
@@ -13515,7 +13517,7 @@ Provide accurate, actionable insights that help business owners understand their
         return res.status(404).json({ message: "Business not found" });
       }
 
-      const insights = await businessHealthService.generatePredictiveInsights(businessId);
+      const insights = await businessHealthService.generatePredictiveInsights(numericBusinessId);
       res.json({ insights, message: "Predictive insights generated successfully" });
     } catch (error: any) {
       console.error("Error generating insights:", error);
@@ -17308,7 +17310,20 @@ Provide accurate, actionable insights that help business owners understand their
     }
   });
 
-  return httpServer;
+  // Health check endpoint
+  app.get("/health", async (req, res) => {
+    try {
+      // Check database connection
+      await mongoose.connection.db.admin().ping();
+      res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error("Health check failed:", error);
+      res.status(503).json({ status: "Service Unavailable", error: "Database connection failed" });
+    }
+  });
+
+  // Return the server instance
+  return server;
 }
 
 function generateEntityComparisonReport(comparisonData: any[]): string {
@@ -17361,37 +17376,4 @@ function generateEntityComparisonReport(comparisonData: any[]): string {
 
   
   return report;
-
-// Health check endpoint for deployment monitoring
-app.get('/api/health', async (req, res) => {
-  try {
-    // Check database connection
-    const dbCheck = await db.select().from(users).limit(1);
-    
-    const healthStatus = {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      database: 'connected',
-      uptime: process.uptime(),
-      memory: {
-        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
-      }
-    };
-    
-    res.status(200).json(healthStatus);
-  } catch (error) {
-    console.error('Health check failed:', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Database connection failed'
-    });
-  }
-});
-
-// Return the server instance
-  return server;
 }

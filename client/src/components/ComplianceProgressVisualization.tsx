@@ -60,24 +60,24 @@ export default function ComplianceProgressVisualization() {
   const [viewMode, setViewMode] = useState<string>('overview');
 
   // Fetch compliance metrics
-  const { data: complianceData, isLoading: metricsLoading } = useQuery({
+  const { data: complianceData, isLoading: metricsLoading } = useQuery<any>({
     queryKey: ['/api/compliance/metrics', selectedBusiness, timeRange],
     refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
   });
 
   // Fetch business list
-  const { data: businesses } = useQuery({
+  const { data: businesses } = useQuery<any>({
     queryKey: ['/api/business-entities'],
   });
 
   // Fetch compliance trends
-  const { data: trendsData } = useQuery({
+  const { data: trendsData } = useQuery<any>({
     queryKey: ['/api/compliance/trends', selectedBusiness, timeRange],
     refetchInterval: 60000, // Refresh every minute
   });
 
   // Fetch category progress
-  const { data: categoryData } = useQuery({
+  const { data: categoryData } = useQuery<any>({
     queryKey: ['/api/compliance/categories', selectedBusiness],
     refetchInterval: 30000,
   });
