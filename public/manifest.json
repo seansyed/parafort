@@ -1,0 +1,24 @@
+{
+  "name": "ParaFort - Business Formation & Compliance Services",
+  "short_name": "ParaFort",
+  "description": "Expert business formation services with AI-powered compliance management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "/assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "lang": "en",
+  "orientation": "portrait-primary"
+}

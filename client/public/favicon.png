@@ -1,0 +1,16 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="90" cy="90" r="90" fill="#059669"/>
+  
+  <!-- Letter P -->
+  <path d="M50 40 L50 140 L65 140 L65 100 L95 100 C105 100 113 92 113 82 L113 58 C113 48 105 40 95 40 L50 40 Z M65 55 L95 55 C97 55 99 57 99 59 L99 81 C99 83 97 85 95 85 L65 85 L65 55 Z" fill="white"/>
+  
+  <!-- Letter F -->
+  <path d="M125 40 L125 140 L140 140 L140 100 L165 100 L165 85 L140 85 L140 55 L170 55 L170 40 L125 40 Z" fill="white"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="35" cy="35" r="4" fill="#34D399" opacity="0.8"/>
+  <circle cx="145" cy="35" r="4" fill="#34D399" opacity="0.8"/>
+  <circle cx="35" cy="145" r="4" fill="#34D399" opacity="0.8"/>
+  <circle cx="145" cy="145" r="4" fill="#34D399" opacity="0.8"/>
+</svg>

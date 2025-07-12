@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="300" height="120">
+  <!-- Shield background -->
+  <path d="M40 25 L40 70 Q40 85 55 92 L120 108 Q140 112 160 108 L225 92 Q240 85 240 70 L240 25 Q240 18 233 18 L47 18 Q40 18 40 25 Z" fill="#22c55e" stroke="none"/>
+  
+  <!-- Castle battlements -->
+  <rect x="50" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="70" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="90" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="110" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="130" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="150" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="170" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="190" y="18" width="12" height="20" fill="#22c55e"/>
+  <rect x="210" y="18" width="12" height="20" fill="#22c55e"/>
+  
+  <!-- Inner shield -->
+  <path d="M55 40 L55 72 Q55 80 68 85 L120 98 Q140 101 160 98 L212 85 Q225 80 225 72 L225 40 Q225 36 221 36 L59 36 Q55 36 55 40 Z" fill="white" stroke="none"/>
+  
+  <!-- PARAFORT text -->
+  <text x="50" y="85" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="bold" fill="#1f2937">PARAFORT</text>
+  
+  <!-- Subtitle -->
+  <text x="50" y="105" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#22c55e">BUSINESS SERVICES &amp; COMPLIANCE</text>
+</svg>

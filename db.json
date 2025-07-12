@@ -1,0 +1,80 @@
+{
+  "folders": [
+    {
+      "id": 1,
+      "name": "Business Formation Documents",
+      "parentId": null
+    },
+    {
+      "id": 2,
+      "name": "IT Services",
+      "parentId": null
+    },
+    {
+      "id": 3,
+      "name": "Onboarding",
+      "parentId": 1
+    },
+    {
+      "id": 4,
+      "name": "Benefits",
+      "parentId": 1
+    },
+    {
+      "id": 5,
+      "name": "Formation Document",
+      "parentId": null,
+      "serviceType": "business-formation",
+      "description": "Formation Document"
+    },
+    {
+      "id": 6,
+      "name": "BOIR Filing Documents",
+      "parentId": null,
+      "serviceType": "boir",
+      "description": "Beneficial Ownership Information Reports"
+    },
+    {
+      "id": 7,
+      "name": "Digital Mailbox",
+      "parentId": null,
+      "serviceType": "digital-mailbox",
+      "description": "Digital mail management and forwarding"
+    },
+    {
+      "id": 8,
+      "name": "EIN Applications",
+      "parentId": null,
+      "serviceType": "ein-management",
+      "description": "Employer Identification Number applications"
+    },
+    {
+      "id": 9,
+      "name": "Dissolution Documents",
+      "parentId": null,
+      "serviceType": "business-dissolution",
+      "description": "Business dissolution and termination forms"
+    },
+    {
+      "id": 10,
+      "name": "Name Change Forms",
+      "parentId": null,
+      "serviceType": "name-change",
+      "description": "Business name change documentation"
+    },
+    {
+      "id": 11,
+      "name": "S-Corp Election Forms",
+      "parentId": null,
+      "serviceType": "s-corporation-election",
+      "description": "S-Corporation tax election forms"
+    },
+    {
+      "id": 12,
+      "name": "Business License Applications",
+      "parentId": null,
+      "serviceType": "business-licenses",
+      "description": "Business license and permit applications"
+    }
+  ]
+}

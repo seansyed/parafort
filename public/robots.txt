@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://parafort.com/sitemap.xml
+
+# Block admin and internal paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /_vite/
+Disallow: /@vite/
+
+# Allow important business pages
+Allow: /
+Allow: /business-formation-service
+Allow: /services-marketplace
+Allow: /formation-workflow

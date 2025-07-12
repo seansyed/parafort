@@ -1,0 +1,34 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green shield background -->
+  <path d="M64 8 L20 28 L20 64 C20 88 40 108 64 120 C88 108 108 88 108 64 L108 28 Z" fill="#22c55e" stroke="#16a34a" stroke-width="2"/>
+  
+  <!-- Crown elements -->
+  <g fill="#fbbf24">
+    <!-- Crown base -->
+    <rect x="40" y="35" width="48" height="6" rx="3"/>
+    <!-- Crown points -->
+    <polygon points="45,35 50,25 55,35"/>
+    <polygon points="58,35 63,20 68,35"/>
+    <polygon points="73,35 78,25 83,35"/>
+  </g>
+  
+  <!-- Castle tower elements -->
+  <g fill="#374151">
+    <!-- Left tower -->
+    <rect x="35" y="45" width="12" height="25" rx="2"/>
+    <rect x="37" y="42" width="8" height="6"/>
+    <!-- Center tower -->
+    <rect x="58" y="40" width="12" height="30" rx="2"/>
+    <rect x="60" y="37" width="8" height="6"/>
+    <!-- Right tower -->
+    <rect x="81" y="45" width="12" height="25" rx="2"/>
+    <rect x="83" y="42" width="8" height="6"/>
+  </g>
+  
+  <!-- Company name -->
+  <text x="64" y="85" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white">PARAFORT</text>
+  
+  <!-- Tagline -->
+  <text x="64" y="98" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="#e5e7eb">BUSINESS SERVICES</text>
+  <text x="64" y="106" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" fill="#e5e7eb">&amp; COMPLIANCE</text>
+</svg>

@@ -1,0 +1,673 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ParaFort Brand Colors */
+    --primary: 142 69% 32%; /* #27884b - ParaFort Green */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --secondary: 210 11% 96%; /* Light gray */
+    --secondary-foreground: 222 47% 11%; /* Dark text on secondary */
+    --accent: 142 69% 32%; /* Same as primary for consistency */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Semantic Colors */
+    --success: 142 76% 36%; /* Green for success states */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%; /* Amber for warnings */
+    --warning-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%; /* Red for errors */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Base Colors */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 222 47% 11%; /* Dark gray text */
+    --muted: 210 11% 96%; /* Very light gray */
+    --muted-foreground: 215 16% 47%; /* Medium gray text */
+    
+    /* UI Elements */
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --border: 214 32% 91%; /* Light border */
+    --input: 214 32% 91%; /* Input background */
+    --ring: 142 69% 32%; /* Focus ring - ParaFort green */
+    
+    /* Chart Colors */
+    --chart-1: 142 69% 32%; /* Primary green */
+    --chart-2: 142 76% 36%; /* Success green */
+    --chart-3: 38 92% 50%; /* Warning amber */
+    --chart-4: 221 83% 53%; /* Info blue */
+    --chart-5: 262 83% 58%; /* Purple accent */
+    
+    --radius: 0.5rem;
+  }
+
+  /* Button Text Visibility Fix */
+  .btn-outline-white {
+    background-color: transparent !important;
+  }
+  
+  /* Force remove backgrounds from check out more buttons */
+  button[class*="text-green-500"] {
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  
+  .btn-outline-white:hover {
+    background-color: white !important;
+    color: inherit !important;
+  }
+  
+  /* Ensure outline buttons with white text are always visible */
+  button[class*="variant-outline"][class*="text-white"],
+  button[class*="outline"][class*="text-white"] {
+    background-color: transparent !important;
+    border-width: 2px !important;
+    font-weight: 600 !important;
+  }
+  
+  button[class*="variant-outline"][class*="text-white"] span,
+  button[class*="outline"][class*="text-white"] span {
+    color: white !important;
+    font-weight: 600 !important;
+  }
+
+  /* Ultra-aggressive button styling - force green buttons with white text */
+  button[class*="bg-green"],
+  .bg-green-500,
+  .bg-green-600,
+  .bg-green-700,
+  button.bg-green-500,
+  button.bg-green-600,
+  button.bg-green-700,
+  [class*="bg-green-"],
+  button[class*="bg-green-"],
+  .Button[class*="bg-green"],
+  button[style*="background"] {
+    background-color: #22c55e !important;
+    background: #22c55e !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    border: none !important;
+    text-decoration: none !important;
+  }
+  
+  button[class*="bg-green"] span,
+  .bg-green-500 span,
+  .bg-green-600 span,
+  .bg-green-700 span,
+  button.bg-green-500 span,
+  button.bg-green-600 span,
+  button.bg-green-700 span,
+  [class*="bg-green-"] span,
+  button[class*="bg-green-"] span,
+  button span {
+    color: #ffffff !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+  }
+  
+  /* Hover states for green buttons */
+  button[class*="bg-green"]:hover,
+  button.bg-green-500:hover,
+  button.bg-green-600:hover,
+  button.bg-green-700:hover,
+  [class*="bg-green-"]:hover {
+    background-color: #16a34a !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+  }
+  
+  /* Nuclear option - force ALL buttons with green classes to be green */
+  button {
+    background-color: inherit;
+  }
+  
+  button[class*="bg-green"] {
+    background-color: #22c55e !important;
+    color: white !important;
+  }
+  
+  /* Target buttons in hero sections specifically */
+  section button,
+  .hero button,
+  [class*="hero"] button {
+    background-color: #22c55e !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+  }
+
+  .dark {
+    /* Dark mode adaptations */
+    --background: 222 47% 11%; /* Dark background */
+    --foreground: 213 31% 91%; /* Light text */
+    --muted: 223 47% 11%; /* Dark muted */
+    --muted-foreground: 215 20% 65%; /* Light muted text */
+    
+    --card: 224 71% 4%; /* Dark cards */
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+    --border: 216 34% 17%; /* Dark border */
+    --input: 216 34% 17%; /* Dark input */
+    
+    --primary: 142 69% 32%; /* Keep green consistent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 213 31% 91%;
+    --accent: 142 69% 32%;
+    --accent-foreground: 0 0% 100%;
+  }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom ParaFort Components */
+@layer components {
+  .parafort-gradient {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+  
+  .parafort-text-gradient {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .parafort-shadow {
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1), 0 2px 4px -1px rgba(34, 197, 94, 0.06);
+  }
+  
+  .parafort-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+  }
+}
+
+:root {
+  --background: 0 0% 100%; /* #FFFFFF */
+  --foreground: 240 10% 3.9%; /* #0A0A0A */
+  --muted: 240 4.8% 95.9%; /* #F7F7F8 */
+  --muted-foreground: 240 3.8% 46.1%; /* #6E6E77 */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 240 10% 3.9%; /* #0A0A0A */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 240 10% 3.9%; /* #0A0A0A */
+  --border: 240 5.9% 90%; /* #E3E3E8 */
+  --input: 240 5.9% 90%; /* #E3E3E8 */
+  --primary: 142 76% 36%; /* #22c55e */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --secondary: 240 4.8% 95.9%; /* #F7F7F8 */
+  --secondary-foreground: 240 5.9% 10%; /* #18181B */
+  --accent: 240 4.8% 95.9%; /* #F7F7F8 */
+  --accent-foreground: 240 5.9% 10%; /* #18181B */
+  --destructive: 0 84.2% 60.2%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 142 76% 36%; /* #22c55e */
+  --radius: 0.5rem;
+  --chart-1: 142 69% 32%; /* #27884b */
+  --chart-2: 142 69% 42%; /* #32a852 */
+  --chart-3: 142 69% 52%; /* #3dc863 */
+  --chart-4: 142 69% 62%; /* #48e974 */
+  --chart-5: 142 69% 72%; /* #53ff85 */
+}
+
+.dark {
+  --background: 240 10% 3.9%; /* #0A0A0A */
+  --foreground: 0 0% 98%; /* #FAFAFA */
+  --muted: 240 3.7% 15.9%; /* #1F1F23 */
+  --muted-foreground: 240 5% 64.9%; /* #9CA3AF */
+  --popover: 240 10% 3.9%; /* #0A0A0A */
+  --popover-foreground: 0 0% 98%; /* #FAFAFA */
+  --card: 240 10% 3.9%; /* #0A0A0A */
+  --card-foreground: 0 0% 98%; /* #FAFAFA */
+  --border: 240 3.7% 15.9%; /* #1F1F23 */
+  --input: 240 3.7% 15.9%; /* #1F1F23 */
+  --primary: 142 76% 36%; /* #22c55e */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --secondary: 240 3.7% 15.9%; /* #1F1F23 */
+  --secondary-foreground: 0 0% 98%; /* #FAFAFA */
+  --accent: 240 3.7% 15.9%; /* #1F1F23 */
+  --accent-foreground: 0 0% 98%; /* #FAFAFA */
+  --destructive: 0 62.8% 30.6%; /* #7F1D1D */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 142 76% 36%; /* #22c55e */
+  --chart-1: 142 76% 36%; /* #22c55e */
+  --chart-2: 142 71% 45%; /* #16a34a */
+  --chart-3: 142 69% 58%; /* #4ade80 */
+  --chart-4: 142 86% 74%; /* #86efac */
+  --chart-5: 143 85% 96%; /* #f0fdf4 */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Enhanced focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --foreground: 0 0% 0%;
+      --background: 0 0% 100%;
+      --border: 0 0% 0%;
+      --primary: 21 100% 40%;
+    }
+  }
+
+  /* Reduced motion support for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Robot Animation Styles */
+  .robot-walking {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .robot-arm-left {
+    animation: swing-left 1s ease-in-out infinite alternate;
+    transform-origin: 50% 10%;
+  }
+
+  .robot-arm-right {
+    animation: swing-right 1s ease-in-out infinite alternate;
+    transform-origin: 50% 10%;
+  }
+
+  .robot-leg-left {
+    animation: walk-left 1s ease-in-out infinite alternate;
+    transform-origin: 50% 10%;
+  }
+
+  .robot-leg-right {
+    animation: walk-right 1s ease-in-out infinite alternate;
+    transform-origin: 50% 10%;
+  }
+
+  .robot-foot-left {
+    animation: step-left 1s ease-in-out infinite alternate;
+  }
+
+  .robot-foot-right {
+    animation: step-right 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes swing-left {
+    0% { transform: rotate(-10deg); }
+    100% { transform: rotate(10deg); }
+  }
+
+  @keyframes swing-right {
+    0% { transform: rotate(10deg); }
+    100% { transform: rotate(-10deg); }
+  }
+
+  @keyframes walk-left {
+    0% { transform: rotate(-5deg); }
+    100% { transform: rotate(5deg); }
+  }
+
+  @keyframes walk-right {
+    0% { transform: rotate(5deg); }
+    100% { transform: rotate(-5deg); }
+  }
+
+  @keyframes step-left {
+    0% { transform: translateX(-2px); }
+    100% { transform: translateX(2px); }
+  }
+
+  @keyframes step-right {
+    0% { transform: translateX(2px); }
+    100% { transform: translateX(-2px); }
+  }
+
+  /* Print styles for legal documents */
+  @media print {
+    body {
+      @apply text-black bg-white;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+}
+
+@layer components {
+  /* Loading states for better UX */
+  .loading-skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+  
+  .loading-spinner {
+    @apply animate-spin border-2 border-current border-t-transparent rounded-full;
+  }
+
+  /* Status indicators for clear communication */
+  .status-success {
+    @apply bg-green-50 text-green-800 border-green-200;
+  }
+  
+  .status-warning {
+    @apply bg-yellow-50 text-yellow-800 border-yellow-200;
+  }
+  
+  .status-error {
+    @apply bg-red-50 text-red-800 border-red-200;
+  }
+  
+  .status-info {
+    @apply bg-blue-50 text-blue-800 border-blue-200;
+  }
+
+  /* Interactive elements with smooth transitions */
+  .interactive-element {
+    @apply transition-all duration-200 ease-in-out transform;
+  }
+  
+  .interactive-element:hover:not(:disabled) {
+    @apply scale-105 shadow-md;
+  }
+
+  .interactive-element:active:not(:disabled) {
+    @apply scale-95;
+  }
+
+  /* Form validation styles for clear feedback */
+  .form-field-error {
+    @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+  }
+  
+  .form-field-success {
+    @apply border-green-500 focus:ring-green-500 focus:border-green-500;
+  }
+  
+  .form-field-warning {
+    @apply border-yellow-500 focus:ring-yellow-500 focus:border-yellow-500;
+  }
+
+  /* Typography for legal content - plain language emphasis */
+  .legal-text {
+    @apply text-sm leading-relaxed space-y-3 text-gray-700;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  
+  .legal-heading {
+    @apply text-lg font-semibold text-gray-900 mb-3 tracking-tight;
+  }
+  
+  .plain-language {
+    @apply text-base leading-relaxed text-gray-700;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Progress indicators for multi-step processes */
+  .progress-step {
+    @apply flex items-center space-x-3 p-4 rounded-lg border transition-all duration-200;
+  }
+  
+  .progress-step.active {
+    @apply bg-primary text-primary-foreground border-primary shadow-sm;
+  }
+  
+  .progress-step.completed {
+    @apply bg-green-50 text-green-800 border-green-200;
+  }
+  
+  .progress-step.disabled {
+    @apply bg-gray-50 text-gray-400 border-gray-200 opacity-60;
+  }
+
+  /* Security and data protection indicators */
+  .security-badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  
+  .encryption-indicator {
+    @apply flex items-center space-x-1 text-xs text-green-600;
+  }
+
+  /* Accessibility improvements */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    @apply sr-only;
+  }
+  
+  .skip-link {
+    @apply absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 rounded-br transform -translate-y-full focus:translate-y-0 transition-transform;
+  }
+
+  /* Performance optimizations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .reduce-motion {
+    @apply transition-none;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+  
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+  
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+  
+  /* Accessibility utilities */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  .visually-hidden {
+    @apply sr-only;
+  }
+  
+  /* Performance utilities */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .contain-layout {
+    contain: layout;
+  }
+
+  /* Modern animations for Legal Documents page */
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(100px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.2;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes bounce-gentle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Animation utility classes */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-fade-in-scale {
+    animation: fadeInScale 0.6s ease-out forwards;
+  }
+
+  /* Animation delays */
+  .animation-delay-1000 {
+    animation-delay: 1s;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Scroll animation classes */
+  .scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+  }
+
+  .scroll-animate.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(45deg, #22c55e, #16a34a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Remove green backgrounds from all Check out more buttons */
+  .check-out-more {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
