@@ -17361,7 +17361,6 @@ function generateEntityComparisonReport(comparisonData: any[]): string {
 
   
   return report;
-}
 
 // Health check endpoint for deployment monitoring
 app.get('/api/health', async (req, res) => {
@@ -17395,3 +17394,4 @@ app.get('/api/health', async (req, res) => {
 
 // Return the server instance
   return server;
+}
